@@ -24,7 +24,7 @@ def testArgs(sIP, inFile):
 if __name__ == '__main__':
 
     # Set port and buffer size
-    port, buffSize = 12345, 1024
+    port, buffSize = 25010, 1024
 
     # Parse all command line inputs, test them, then read data
     testArgLength()
@@ -36,7 +36,6 @@ if __name__ == '__main__':
     filePath = dirPath + "/" + inFile
     size = os.path.getsize(filePath)
     iterNum = math.ceil(size / buffSize)
-    print(size)
 
     # Read 1024 bytes at a time from the file
     data = []
@@ -47,20 +46,21 @@ if __name__ == '__main__':
     # Perform TCP socket programming for client side
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     sInfo = (str(sIP), port)
-    sock.connect(sInfo)
+    # sInfo = (socket.gethostname(), port)
 
     try:
-        print("Connection established")
+        sock.connect(sInfo)
+        print("Connection established. Sending File\n")
         for a in range(0, len(data)):
-            print('sending "{message}"'.format(message=data[a]))
+            message = str(data[a])[2:][:len(data[a])]
+            print("Sending packet " + str(a + 1) + ": \"{message}\"".format(message=message))
             sock.send(data[a])
+            servResp = sock.recv(buffSize)
+            servResp = str(servResp)[2:][:len(servResp)]
+            print("Received: \"{data}\"".format(data=servResp))
 
-            while True:
-                servResp = sock.recv(buffSize)
-                print('received "{data}"'.format(data=servResp))
-                break
     finally:
-        print('Closing socket')
+        print("Closing socket and connection")
         sock.close()
 
 

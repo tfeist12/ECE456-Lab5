@@ -1,4 +1,3 @@
-from pip._vendor.distlib.compat import raw_input
 import sys
 import socket
 import helper
@@ -16,7 +15,7 @@ def testArgLength():
 if __name__ == '__main__':
 
     # Set ip, port, and buffer size
-    ip, port, buffSize = socket.gethostname(), 12345, 1024
+    ip, port, buffSize = "0.0.0.0", 25010, 1024
 
     # Parse all command line inputs, test them, then read data
     testArgLength()
@@ -27,16 +26,48 @@ if __name__ == '__main__':
     sInfo = (ip, port)
     sock.bind(sInfo)
 
+    print("Waiting for packets from client file\n")
     sock.listen(1) # 1 = number of sockets
+    data = []
     while True:
         connection, client_address = sock.accept()
         try:
             while True:
-                data = connection.recv(buffSize)
-                print('message received: {data}'.format(data=data))
-                connection.send(bytes("ok"))
+                message = connection.recv(buffSize)
+                messageStr = str(message)[2:][:len(message)]
+                if len(message) != 0:
+                    print("Received: \"{message}\"".format(message=messageStr))
+                    data.append(message)
+                    connection.send(bytes("OK", 'utf-8'))
+                else:
+                    print("Client closed connection")
+                    break
         finally:
             connection.close()
+            break
+
+    # Confirm user wants to receive the file
+    print("\nDo you want to receive this file?")
+    while True:
+        print("Type y for yes and n for no: ")
+        resp = input()
+        resp = resp.lower()
+        if resp == "y":
+            print("\nReceiving the file, it will be saved as " + filename)
+            break
+        elif resp == "n":
+            print("Response was no, Exiting!")
+            sys.exit()
+        else:
+            print("Invalid response. Try again")
+
+    # Save the file to local machine
+    file = open(filename, "wb")
+    for a in range(0, len(data)):
+        file.write(data[a])
+    file.close()
+
+
 
 
 
